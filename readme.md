@@ -76,44 +76,45 @@ Develop a **simulated autonomous robot** in **Webots**, controlled by an **AI mo
 
 ## 🏣 Folders Architecture
 
+```plaintext
 robot-ai-simulation/
 │
-├── ai-scripts/             `AI-related scripts`
-│   ├── model.py                `MLP, LSTM, GRU, ... architectures`
-│   ├── parser.py               `Use input parameters when running the script`
-│   ├── test.py                 `Testing logic`
-│   ├── train.py                `Training logic`
-│   └── utils.py                `Other miscellanous functions`
+├── ai-scripts/             'AI-related scripts'
+│   ├── model.py                'MLP, LSTM, GRU, ... architectures'
+│   ├── parser.py               'Use input parameters when running the script'
+│   ├── test.py                 'Testing logic'
+│   ├── train.py                'Training logic'
+│   └── utils.py                'Other miscellanous functions'
 │
-├── controllers/            `Webots controllers`
-│   ├── basic/                  `Rule-based or simple control logic`
-│   └── ml/                     `Controller that uses trained AI model`
+├── controllers/            'Webots controllers'
+│   ├── basic/                  'Rule-based or simple control logic'
+│   └── ml/                     'Controller that uses trained AI model'
 │
-├── data/                   `Sensor data and logs from simulations`
-│   ├── raw/                    `Raw collected data`
-│   └── processed/              `Cleaned, normalized, ready-for-training data`
+├── data/                   'Sensor data and logs from simulations'
+│   ├── raw/                    'Raw collected data'
+│   └── processed/              'Cleaned, normalized, ready-for-training data'
 │
-├── docs/                   `Documentation, architecture diagrams, ...`
+├── docs/                   'Documentation, architecture diagrams, ...'
 │
-├── logs/                   `Notes, experiment logs, debug info`
-│   └── log_n.md              `Log number "n" on the work done`
+├── logs/                   'Notes, experiment logs, debug info'
+│   └── log_n.md              'Log number "n" on the work done'
 │
-├── models/                 `Saved PyTorch models (".pt" or ".onnx "files)`
-│   └── readme.md               `Notes on each model and training context`
+├── models/                 'Saved PyTorch models (".pt" or ".onnx "files)'
+│   └── readme.md               'Notes on each model and training context'
 │
-├── simulation/             `All Webots-related files`
-│   ├── worlds/                 `".wbt" world files`
-│   ├── robots/                 `Robot configuration files (PROTO, ".wbo", ...)`
-│   └── assets/                 `3D models, textures, sounds, ...`
+├── simulation/             'All Webots-related files'
+│   ├── worlds/                 '".wbt" world files'
+│   ├── robots/                 'Robot configuration files (PROTO, ".wbo", ...)'
+│   └── assets/                 '3D models, textures, sounds, ...'
 │
-├── .gitignore              `Files ignored by Git`
+├── .gitignore              'Files ignored by Git'
 │
-├── main.py                 `Entry-point or test runner`
+├── main.py                 'Entry-point or test runner'
 │
-├── readme.md               `Project Description`
+├── readme.md               'Project Description'
 │
-└── requirements.txt        `Python dependencies`
-
+└── requirements.txt        'Python dependencies'
+```
 --------------------
 
 ## 💾 Version Control: Using GitHub Effectively
