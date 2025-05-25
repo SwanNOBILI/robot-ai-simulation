@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environments
+.venv/
+env/
+
+# AI outputs
+models/*.pt
+models/*.onnx
+
+# Webots temp files
+*.wbo
+*.wbt~
+*.wrl~
+cache/
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Code Editors
+.vscode/
+.idea/
