@@ -1,3 +1,6 @@
+## **In this session, I worked during 2 hours**
+<br> <br>
+
 ## I completed the "readme.md" that contains the project global info
 <br> <br>
 
@@ -8,4 +11,4 @@
 <br> <br>
 
 ## I created the Github repository
-<br> <br>
+<br>

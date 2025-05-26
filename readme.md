@@ -76,7 +76,7 @@ Develop a **simulated autonomous robot** in **Webots**, controlled by an **AI mo
 
 ## 🏣 Folders Architecture
 
-```plaintext
+```
 robot-ai-simulation/
 │
 ├── ai-scripts/             'AI-related scripts'
@@ -85,10 +85,6 @@ robot-ai-simulation/
 │   ├── test.py                 'Testing logic'
 │   ├── train.py                'Training logic'
 │   └── utils.py                'Other miscellanous functions'
-│
-├── controllers/            'Webots controllers'
-│   ├── basic/                  'Rule-based or simple control logic'
-│   └── ml/                     'Controller that uses trained AI model'
 │
 ├── data/                   'Sensor data and logs from simulations'
 │   ├── raw/                    'Raw collected data'
@@ -99,13 +95,13 @@ robot-ai-simulation/
 ├── logs/                   'Notes, experiment logs, debug info'
 │   └── log_n.md              'Log number "n" on the work done'
 │
-├── models/                 'Saved PyTorch models (".pt" or ".onnx "files)'
+├── models/                 'Saved PyTorch models (".pt" or ".onnx" files)'
 │   └── readme.md               'Notes on each model and training context'
 │
-├── simulation/             'All Webots-related files'
-│   ├── worlds/                 '".wbt" world files'
-│   ├── robots/                 'Robot configuration files (PROTO, ".wbo", ...)'
-│   └── assets/                 '3D models, textures, sounds, ...'
+├── robots/e-puck           'All (e-puck) Webot-related files'
+│   ├── controllers/            'C/C++/Python scripts that make the Robot work'
+│   ├── proto/                  'Robot configuration file + some other useful folders'
+│   └── worlds/                 'The Worlds (simulation) configuration (".wbt" files)'
 │
 ├── .gitignore              'Files ignored by Git'
 │
