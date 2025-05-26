@@ -1,4 +1,4 @@
-## **In this session, I worked during 3 hours**
+## **In this session, I worked during 5 hours**
 <br> <br>
 
 ## I downloaded the "Webots" application and tried a simple Robot named "e-puck" from "gctronic". The default simulation is working well. The world is a simple square with 4 boxes (with fixed positions). The Robot is moving forward using 2 actuators that are "left wheel" and "right wheel" and dodges the boxes or the square borders with 8 visual Sensors.
@@ -12,4 +12,5 @@
 
 ## Finally, I made a new "basic_controller" in 'Python'. In fact, the default one is located in the local "Webots" file and is a compiled 'C' file (so a ".exe"). But I needed to make my own controller in 'Python' and change the dependency of my project simulation so that "basic_controller" is used instead of the default 'C' controller.<br>
 ### Before going into the controller programming, I created an environment for my project. Indeed, it ensures that nothing will break in the future (due to libraries update).<br>
+### For now, the controller I made is a simple one that can: -read from sensors, -set motor velocities (stop when near an obstacle)
 <br>

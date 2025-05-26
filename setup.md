@@ -47,8 +47,7 @@ Set the following environment variable **permanently**:
 
 ## 🧪 3. Python Controller Setup
 
-Make sure the controller file is located at:
-
+The controller file should be located at (the Robot behaviour is described in this file):
 ```
 robots/e-puck/controllers/basic/basic.py
 ```
@@ -61,7 +60,12 @@ robots/e-puck/controllers/basic/basic.py
 2. Go to: `File → Open World`
 3. Select: ```robots/e-puck/worlds/my_world.wbt```
 4. Press the **Play** button (▶️)
-The Robot should be executing the program located in `robots/e-puck/controllers/basic/basic.py`
+The Robot should be executing the program located in `robots/e-puck/controllers/basic/basic.py` and you should see this at the beginning of the console:
+```
+WARNING: E-puck "e-puck": The 'e-puck' robot window library has not been found.
+WARNING: E-puck "e-puck": The remote control library has not been found.
+INFO: basic: Starting controller: python.exe -u basic.py
+```
 
 --------------------
 
@@ -73,4 +77,4 @@ You now have:
 * A working Python controller
 * A clean, extensible project architecture
 
-You're ready to start the simulations !
+You're ready to experiment !

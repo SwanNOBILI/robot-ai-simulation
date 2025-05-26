@@ -109,7 +109,9 @@ robot-ai-simulation/
 │
 ├── readme.md               'Project Description'
 │
-└── requirements.txt        'Python dependencies'
+├── requirements.txt        'Python dependencies'
+│
+└── setup.md                'Infos on setuping `Webots` & the Project environment'
 ```
 --------------------
 
