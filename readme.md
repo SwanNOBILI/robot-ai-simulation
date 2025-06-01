@@ -99,7 +99,7 @@ robot-ai-simulation/
 │   └── readme.md               'Notes on each model and training context'
 │
 ├── robots/e-puck           'All (e-puck) Webot-related files'
-│   ├── controllers/            'C/C++/Python scripts that make the Robot work'
+│   ├── controllers/            'C/C++/Python scripts that make the Robot & World work'
 │   ├── proto/                  'Robot configuration file + some other useful folders'
 │   └── worlds/                 'The Worlds (simulation) configuration (".wbt" files)'
 │

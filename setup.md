@@ -45,11 +45,12 @@ Set the following environment variable **permanently**:
 
 --------------------
 
-## 🧪 3. Python Controller Setup
+## 🧪 3. Download the needed libraries
 
-The controller file should be located at (the Robot behaviour is described in this file):
+You will need to install python libraries in your project environment:
 ```
-robots/e-puck/controllers/basic/basic.py
+.\venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
 --------------------
@@ -74,7 +75,7 @@ INFO: basic: Starting controller: python.exe -u basic.py
 You now have:
 
 * A local `E-puck` robot simulation using your own PROTO and assets
-* A working Python controller
+* All the Python libraries needed
 * A clean, extensible project architecture
 
 You're ready to experiment !
