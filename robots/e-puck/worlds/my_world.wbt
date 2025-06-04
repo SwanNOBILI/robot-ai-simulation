@@ -20,14 +20,18 @@ TexturedBackground {
 }
 TexturedBackgroundLight {
 }
-RectangleArena {
-  floorSize 2 2
+DEF ARENA RectangleArena {
+  floorSize 1.0 1.5
 }
 Robot {
   name "supervisor"
   supervisor TRUE
   controller "supervisor"
   children [
+    Emitter {
+      name "supervisor_emitter"
+      channel 1
+    }
     Receiver {
       name "supervisor_receiver"
       channel 1
@@ -39,4 +43,5 @@ DEF EPUCK E-puck {
   name "e-puck"
   controller "basic"
   emitter_channel 1
+  receiver_channel 1
 }

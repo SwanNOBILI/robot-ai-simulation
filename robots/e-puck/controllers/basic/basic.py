@@ -6,8 +6,18 @@ NUM_DISTANCE_SENSORS = 8
 
 # Initialization
 robot = Robot()
-emitter = robot.getDevice("emitter")
 timestep = int(robot.getBasicTimeStep())
+emitter = robot.getDevice("emitter")
+receiver = robot.getDevice("receiver")
+receiver.enable(timestep)
+
+# Get the Robot goal (from supervisor)
+goal_position = [0, 0, 0]
+if receiver.getQueueLength() > 0:
+    message = receiver.getString()
+    gx, gy = map(float, message.split())
+    goal_position = [gx, gy]
+    receiver.nextPacket()
 
 # Get and enable 8 distance sensors
 sensor_names = [f"{SENSOR_PREFIX}{i}" for i in range(NUM_DISTANCE_SENSORS)]     # ps0, ps1, ..., ps7

@@ -4,57 +4,100 @@ import math
 import numpy as np
 
 
-# Initialization
+
+# World parameters
+box_size = 0.1
+min_distance = 2 * box_size     # between objects
+min_boxes = 4
+max_boxes = 10
+
+# Supervisor Initialization
 supervisor = Supervisor()
 timestep = int(supervisor.getBasicTimeStep())
+emitter = supervisor.getDevice("supervisor_emitter")
 receiver = supervisor.getDevice("supervisor_receiver")
 receiver.enable(timestep)
+root = supervisor.getRoot()
+children = root.getField("children")
+arena_node = supervisor.getFromDef("ARENA")
+arena_size = arena_node.getField("floorSize").getSFVec2f()
 
 
+
+# Get a random position in the Arena
+def get_random_position():
+    return [random.uniform(-arena_size[0]/2 + min_distance, arena_size[0]/2 - min_distance), 
+            random.uniform(-arena_size[1]/2 + min_distance, arena_size[1]/2 - min_distance)
+           ]
 
 # Generate a non-overlapping position
 def generate_non_overlapping_position(existing_positions):
-    for _ in range(1000):  # max attempts
-        x = random.uniform(-arena_size/2 + box_size, arena_size/2 - box_size)
-        y = random.uniform(-arena_size/2 + box_size, arena_size/2 - box_size)
-        if all(((x - ex)**2 + (y - ey)**2) ** 0.5 > min_distance for ex, ey in existing_positions):
-            return (x, y)
+    # Area bounds (assuming square arena)
+    half_width = arena_size[0] / 2 - min_distance
+    half_height = arena_size[1] / 2 - min_distance
+    # Path between goal position & start position
+    path = np.array(goal_position) - np.array(start_position)
+    direction = path / np.linalg.norm(path)
+    perpendicular = np.array([-direction[1], direction[0]]) # perpendicular direction (to add lateral noise)
+    for _ in range(1000):   # max attempts to create a new position
+        t = random.uniform(min_distance, 1-min_distance)    # avoid placing right at start/goal
+        lateral_offset = random.gauss(0, 0.15)              # std-dev of spread
+        center = np.array(start_position) + t*path
+        new_position = center + lateral_offset*perpendicular
+        # If the position is located in the area (+/- min_distance)
+        if (-half_width <= new_position[0] <= half_width) and (-half_height <= new_position[1] <= half_height):
+            # If the position isn't near another box (+/- min_distance)
+            if all(math.sqrt((new_position[0]-ex)**2 + (new_position[1]-ey)**2) > min_distance for ex, ey in existing_positions):
+                return new_position
     return None
 
-
-
-# Load parameters
-arena_size = 2.0  # from RectangleArena (2x2)
-box_size = 0.1
-min_distance = 5 * box_size  # between boxes
-min_boxes = 3
-max_boxes = 8
-
-
+#
+def place_marker(position, color_rgb, transparency=0.5):
+    r, g, b = color_rgb
+    return f'''
+Transform {{
+  translation {position[0]} {position[1]} {0}
+  children [
+    Shape {{
+      appearance Appearance {{
+        material Material {{
+          diffuseColor {r} {g} {b}
+          transparency {transparency}
+        }}
+      }}
+      geometry Box {{
+        size 0.1 0.1 0.001  # flat rectangle
+      }}
+    }}
+  ]
+}}
+'''
 
 # E-puck spawn
-positions = []  # e-puck & boxes positions
-epuck_position = generate_non_overlapping_position(positions)
-#epuck_position = (0.0, 0.0)
-positions.append(epuck_position)
+start_position = get_random_position()
 epuck_angle = random.uniform(0, 2 * math.pi)
-#epuck_angle = 0.0
-
 epuck_node = supervisor.getFromDef("EPUCK")
 if epuck_node:
     translation_field = epuck_node.getField("translation")
-    translation_field.setSFVec3f([epuck_position[0], epuck_position[1], 0.0])
+    translation_field.setSFVec3f([start_position[0], start_position[1], 0.0])
     rotation_field = epuck_node.getField("rotation")
     rotation_field.setSFRotation([0, 0, 1, epuck_angle])
-    print(f"E-puck starts at ({epuck_position[0]:.2f}, {epuck_position[1]:.2f} 0.0) with angle {epuck_angle:.2f} rad")
+    print(f"E-puck starts at ({start_position[0]:.2f}, {start_position[1]:.2f} 0.0) with angle {epuck_angle:.2f} rad")
+print(f"The Robot start position is {start_position}")
+children.importMFNodeFromString(-1, place_marker(start_position, (0.3, 0.3, 1)))    # light blue
+
+# Robot goal
+goal_position = get_random_position()
+emitter.send(f"{goal_position}")
+print(f"The Robot goal position is {goal_position}")
+children.importMFNodeFromString(-1, place_marker(goal_position, (1, 0.3, 0.3)))     # light red
 
 
 
 # Boxes spawn
+positions = [start_position]    # e-puck & boxes positions
 num_boxes = random.randint(min_boxes, max_boxes)
-root = supervisor.getRoot()
-children = root.getField("children")
-
+print("#####################################################################################")
 for i in range(num_boxes):
     box_position = generate_non_overlapping_position(positions)
     box_angle = random.uniform(0, 2 * math.pi)
@@ -67,12 +110,13 @@ print("#########################################################################
 
 
 
-# 
+# Rotate a vector from the Robot perspective to the world perspective
 def rotate_vector_by_quat(v, q):
     # q * v * q^-1
     q_conj = [q[0], -q[1], -q[2], -q[3]]    # q^-1 = q_conj because q is unitary
     v_quat = [0] + v    # quaternion representation of "v" (w=0) q=(w,x,y,z)
     return quat_mult(quat_mult(q, v_quat), q_conj)[1:]  # remove w component from the result
+
 # Quaternion (matrixes) multiplication
 def quat_mult(q1, q2):
     a1, b1, c1, d1 = q1  # w1, x1, y1, z1
@@ -83,11 +127,13 @@ def quat_mult(q1, q2):
         a1*c2 - b1*d2 + c1*a2 + d1*b2,  # y_out
         a1*d2 + b1*c2 - c1*b2 + d1*a2   # z_out
     ]
+
 # Convert (axis, theta) to quaternion matrix
 def axis_angle_to_quat(axis, theta):
     axis = np.array(axis)
     axis = axis / np.linalg.norm(axis)
     return [np.cos(theta/2)] + list(np.sin(theta/2) * axis)
+
 # Convert quaternion matrix to (axis, theta)
 def quat_to_axis_angle(q):
     a, b, c, d = q
@@ -130,6 +176,7 @@ while supervisor.step(timestep) != -1:
     # Convert final quaternion to axis-angle (Webots expects this format)
     camera_orientation = quat_to_axis_angle(q_combined)
 
+    # Make the Webots Viewpoint focused on this Camera view
     viewpoint = supervisor.getFromDef("VIEW")
     if viewpoint:
         viewpoint.getField("position").setSFVec3f(camera_position)
