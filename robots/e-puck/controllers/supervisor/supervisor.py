@@ -3,13 +3,6 @@ import random
 import math
 import numpy as np
 
-
-# World parameters
-box_size = 0.1
-min_distance = 2 * box_size     # between objects
-min_boxes = 4
-max_boxes = 10
-
 # Supervisor Initialization
 supervisor = Supervisor()
 timestep = int(supervisor.getBasicTimeStep())
@@ -21,39 +14,73 @@ children = root.getField("children")
 arena_node = supervisor.getFromDef("ARENA")
 arena_size = arena_node.getField("floorSize").getSFVec2f()
 
+# World parameters
+minimal_box_size = 0.035                                    # height of the E-puck robot (sensors need to see boxes)
+maximal_box_size = 0.1
+min_distance = maximal_box_size                             # between objects
+min_boxes = 5
+max_boxes = 10
+min_start_goal_distance = np.linalg.norm(arena_size) * 0.3  # goal seperated at least of 30% of arena size from start
+
 
 
 # Get a random position in the Arena
-def get_random_position():
-    return [random.uniform(-arena_size[0]/2 + min_distance, arena_size[0]/2 - min_distance), 
-            random.uniform(-arena_size[1]/2 + min_distance, arena_size[1]/2 - min_distance)
-           ]
+def get_random_position_with_margin(margin):
+    return [random.uniform(-arena_size[0]/2 + margin, arena_size[0]/2 - margin), 
+            random.uniform(-arena_size[1]/2 + margin, arena_size[1]/2 - margin)]
 
-# Generate a non-overlapping position
-def generate_non_overlapping_position(existing_positions):
-    # Area bounds (assuming square arena)
-    half_width = arena_size[0] / 2 - min_distance
-    half_height = arena_size[1] / 2 - min_distance
-    # Path between goal position & start position
-    path = np.array(goal_position) - np.array(start_position)
-    direction = path / np.linalg.norm(path)
-    perpendicular = np.array([-direction[1], direction[0]]) # perpendicular direction (to add lateral noise)
-    for _ in range(1000):   # max attempts to create a new position
-        t = random.uniform(min_distance, 1-min_distance)    # avoid placing right at start/goal
-        lateral_offset = random.gauss(0, 0.15)              # std-dev of spread
-        center = np.array(start_position) + t*path
-        new_position = center + lateral_offset*perpendicular
-        # If the position is located in the area (+/- min_distance)
-        if (-half_width <= new_position[0] <= half_width) and (-half_height <= new_position[1] <= half_height):
-            # If the position isn't near another box (+/- min_distance)
-            if all(math.sqrt((new_position[0]-ex)**2 + (new_position[1]-ey)**2) > min_distance for ex, ey in existing_positions):
-                return new_position
+def get_start_and_goal_position(minimal_goal_distance, margin, max_attempts=1000):
+    for _ in range(max_attempts):
+        start_position = get_random_position_with_margin(margin)
+        goal_position = get_random_position_with_margin(margin)
+        dist = np.linalg.norm(np.array(goal_position) - np.array(start_position))
+        if dist >= minimal_goal_distance:
+            return start_position, goal_position
+    # fallback if can't find a good position
+    return get_random_position_with_margin(margin), get_random_position_with_margin(margin)
+
+# Get a random box sizes
+def get_random_box_sizes():
+    box_x_size = random.uniform(minimal_box_size, maximal_box_size)
+    box_y_size = random.uniform(minimal_box_size, maximal_box_size)
+    box_z_size = random.uniform(minimal_box_size, maximal_box_size)
+    return [box_x_size, box_y_size, box_z_size]
+
+# Generate non-overlapping position for the Boxes
+def generate_non_overlapping_position_near_path(existing_boxes, new_box_size, max_attempts=10000):
+    half_width = arena_size[0] / 2 - maximal_box_size
+    half_height = arena_size[1] / 2 - maximal_box_size
+    path_vec = np.array(goal_position) - np.array(start_position)
+    path_length = np.linalg.norm(path_vec)
+    direction = path_vec / path_length
+    perpendicular = np.array([-direction[1], direction[0]])
+    sigma_lateral = 0.04
+    sx_new, sy_new, _ = new_box_size
+    for _ in range(max_attempts):
+        t = random.uniform(0, 1)
+        d = random.gauss(0, sigma_lateral)
+        base_pos = np.array(start_position) + t * path_vec
+        new_position = base_pos + d * perpendicular
+        if not (-half_width <= new_position[0] <= half_width and -half_height <= new_position[1] <= half_height):
+            continue
+        collision = False
+        for ex, ey, esize in existing_boxes:
+            sx_i, sy_i, _ = esize
+            dx = abs(new_position[0] - ex)
+            dy = abs(new_position[1] - ey)
+            min_dist_x = (sx_new + sx_i) / 2 + min_distance
+            min_dist_y = (sy_new + sy_i) / 2 + min_distance
+            if dx < min_dist_x and dy < min_dist_y:
+                collision = True
+                break
+        if not collision:
+            return new_position.tolist()
     return None
 
-#
+# Place semi-transparent rectangles on the ground for the Start (blue) & Goal (red) Robot positions
 def place_marker(position, color_rgb, transparency=0.5):
     r, g, b = color_rgb
-    return f'''
+    return f"""
 Transform {{
   translation {position[0]} {position[1]} {0}
   children [
@@ -65,16 +92,19 @@ Transform {{
         }}
       }}
       geometry Box {{
-        size 0.1 0.1 0.001  # flat rectangle
+        size {maximal_box_size} {maximal_box_size} 0.001  # flat rectangle
       }}
     }}
   ]
 }}
-'''
+"""
 
-# E-puck spawn
-start_position = get_random_position()
+
+
+# E-puck spawn & goal
+start_position, goal_position = get_start_and_goal_position(min_start_goal_distance, maximal_box_size)
 epuck_angle = random.uniform(0, 2 * math.pi)
+# Set Robot into its start position and initial angle
 epuck_node = supervisor.getFromDef("EPUCK")
 if epuck_node:
     translation_field = epuck_node.getField("translation")
@@ -82,30 +112,29 @@ if epuck_node:
     rotation_field = epuck_node.getField("rotation")
     rotation_field.setSFRotation([0, 0, 1, epuck_angle])
     print(f"E-puck starts at ({start_position[0]:.2f}, {start_position[1]:.2f} 0.0) with angle {epuck_angle:.2f} rad")
-print(f"The Robot start position is {start_position}")
-children.importMFNodeFromString(-1, place_marker(start_position, (0.3, 0.3, 1)))    # light blue
-
+children.importMFNodeFromString(-1, place_marker(start_position, (0.3, 0.3, 1)))    # place a light blue marker
 # Robot goal
-goal_position = get_random_position()
 emitter.send(f"{goal_position[0]} {goal_position[1]}")
 print(f"The Robot goal position is {goal_position}")
-children.importMFNodeFromString(-1, place_marker(goal_position, (1, 0.3, 0.3)))     # light red
+children.importMFNodeFromString(-1, place_marker(goal_position, (1, 0.3, 0.3)))     # place a light red marker
 
 
 
 # Boxes spawn
-positions = [start_position]    # e-puck & boxes positions
-num_boxes = random.randint(min_boxes, max_boxes)
+positions = [(start_position[0], start_position[1], [0, 0, 0]), (goal_position[0], goal_position[1], [0, 0, 0])]
+num_boxes = random.randint(min_boxes, max_boxes)    # Number of boxes to place
 print("########################################################################################")
 for i in range(num_boxes):
-    box_position = generate_non_overlapping_position(positions)
-    box_angle = random.uniform(0, 2 * math.pi)
+    box_size = get_random_box_sizes()
+    box_position = generate_non_overlapping_position_near_path(positions, box_size)
     if box_position is None:
         continue
-    positions.append(box_position)
-    children.importMFNodeFromString(-1, f"myWoodenBox {{ translation {box_position[0]} {box_position[1]} {box_size/2} rotation 0 0 1 {box_angle} size {box_size} {box_size} {box_size} }}")
-    print(f"Placed box at ({box_position[0]:.2f}, {box_position[1]:.2f} {box_size/2}) with angle {box_angle:.2f} rad")
+    box_angle = random.uniform(0, 2 * math.pi)
+    positions.append((box_position[0], box_position[1], box_size))
+    children.importMFNodeFromString(-1, f"myWoodenBox {{ translation {box_position[0]} {box_position[1]} {box_size[2]/2} rotation 0 0 1 {box_angle} size {box_size[0]} {box_size[1]} {box_size[2]} }}")
+    print(f"Placed box at ({box_position[0]:.2f}, {box_position[1]:.2f} {box_size[2]/2:.3f}) with angle {box_angle:.2f} rad and size {box_size}")
 print("########################################################################################")
+
 
 
 

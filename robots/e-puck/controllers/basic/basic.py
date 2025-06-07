@@ -152,7 +152,7 @@ while not norm_position_diff < norm_position_threshold:
     # Debug
     if i % idx_debugs == 0:
         #print(f"Current Motors Speed: ({left_motor_speed:5.2f},{right_motor_speed:5.2f}) | Desired Motors Speed: ({desired_left_motor_speed:5.2f}, {desired_right_motor_speed:5.2f})")
-        print(f"Progression `{100*norm_position_diff/initial_distance:6.2f}%` -> ΔP = ({position_diff[0]:6.3f},{position_diff[1]:6.3f})")
+        print(f"Progression {100*norm_position_diff/initial_distance:6.2f}% -> ΔP = [{position_diff[0]:6.3f},{position_diff[1]:6.3f}]")
         print("-----------------------------------------------------------------------------")
 
     # Increase loop count
