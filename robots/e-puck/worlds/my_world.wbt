@@ -3,7 +3,7 @@
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
-IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/WoodenBox.proto"
+IMPORTABLE EXTERNPROTO "../proto/myWoodenBox.proto"
 EXTERNPROTO "../proto/E-puck.proto"
 
 WorldInfo {
@@ -30,7 +30,7 @@ Robot {
   children [
     Emitter {
       name "supervisor_emitter"
-      channel 1
+      channel 2
     }
     Receiver {
       name "supervisor_receiver"
@@ -38,10 +38,15 @@ Robot {
     }
   ]
 }
-
 DEF EPUCK E-puck {
   name "e-puck"
   controller "basic"
   emitter_channel 1
-  receiver_channel 1
+  receiver_channel 2
+  turretSlot [
+    GPS {
+    }
+    Compass {
+    }
+  ]
 }
