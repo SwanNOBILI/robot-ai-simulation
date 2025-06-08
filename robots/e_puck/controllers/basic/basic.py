@@ -1,5 +1,7 @@
 from controller import Robot
 import numpy as np
+from robots.e_puck.controllers.eval.evaluate_controller import Evaluator
+
 
 # FIXED VARIABLE
 PI = np.pi
@@ -82,19 +84,24 @@ def proximity_weight(sensor_value, scale=70):
 # Initialization
 robot.step()
 initial_distance = np.linalg.norm(np.array(goal_position) - np.array(gps.getValues()[:2]))
-left_motor_speed = 0.0                      # current left_motor_speed
-right_motor_speed = 0.0                     # current right_motor_speed
-norm_position_diff = float("inf")           # current norm(position)
-norm_position_threshold = 0.02              # norm(position) threshold
-angle_threshold = np.deg2rad(1)             # angle (°) threshold
+left_motor_speed = 0.0                          # current left_motor_speed
+right_motor_speed = 0.0                         # current right_motor_speed
+norm_position_diff = float("inf")               # current norm(position)
+norm_position_threshold = 0.02                  # goal tolerance
+angle_threshold = np.deg2rad(1)                 # angle (°) threshold
 phase = "rotate"
-i = 0                                       # loop count
-idx_debugs = 30                             # used for debug
+evaluator = Evaluator("basic", goal_position, norm_position_threshold)
+i = 0                                           # loop count
+idx_debugs = 30                                 # used for debug
+collision_active = False
 
 # Main loop
 while not norm_position_diff < norm_position_threshold:
     # Go to the next simulation step
     robot.step()
+
+    # Get the Proximity sensor values
+    sensor_values = [sensor.getValue() for sensor in sensors]
 
     # Get current needed values
     current_position = gps.getValues()
@@ -124,7 +131,6 @@ while not norm_position_diff < norm_position_threshold:
             desired_right_motor_speed = 0.0
     elif phase == "forward":
         # Obstacles avoidance using Braitenberg logic
-        sensor_values = [sensor.getValue() for sensor in sensors]
         desired_left_motor_speed = 0.0
         desired_right_motor_speed = 0.0
         # Braitenberg motion
@@ -158,11 +164,21 @@ while not norm_position_diff < norm_position_threshold:
     # Increase loop count
     i+=1
 
+    # Evaluate the current values
+    evaluator.update(current_position, (left_motor_speed, right_motor_speed), timestep, sensor_values)
+
+    # If the Robot got stuck, stop the simulation
+    if evaluator.stuck_counter > 500:
+        break
+
 
 
 # When the goal is reached, stop moving
 left_motor.setVelocity(0)
 right_motor.setVelocity(0)
+
+# Save the final evaluation
+evaluator.save()
 
 # Send the information that the Controller is finished (robot isn't moving anymore) (into the channel 1, see in .wbt file)
 emitter.send("finished")

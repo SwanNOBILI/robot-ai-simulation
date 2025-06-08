@@ -1,0 +1,9 @@
+{
+  "total_distance": 0.78,
+  "duration": 30.72,
+  "path_efficiency": 83.12,
+  "goal_reached": true,
+  "stability_issues": 0,
+  "stuck_count": 0,
+  "collisions": 1
+}

@@ -1,4 +1,4 @@
-## **In this session, I worked during 10 hours**
+## **In this session, I worked during 12 hours**
 <br> <br>
 
 ## I added a GPS & Compass to my E-puck so that the controller knows the position & north orientation (in the Robot's frame)

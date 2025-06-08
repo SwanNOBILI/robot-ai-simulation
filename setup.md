@@ -45,13 +45,17 @@ Set the following environment variable **permanently**:
 
 --------------------
 
-## 🧪 3. Download the needed libraries
+## 🧪 3. Set Up the used modules/libraries
 
 You will need to install python libraries in your project environment:
 ```
 .\venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+And you will also need to add your `project_path` to your `PYTHONPATH`. To do so, just edit your 'system environment variables', in the System Variables:
+- if `PYTHONPATH` already exist add `;project_path` at the end
+- if not, create a new variable namde `PYTHONPATH` and put the value `project_path`
 
 --------------------
 

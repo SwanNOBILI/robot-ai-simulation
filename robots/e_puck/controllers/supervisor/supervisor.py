@@ -123,16 +123,18 @@ children.importMFNodeFromString(-1, place_marker(goal_position, (1, 0.3, 0.3))) 
 # Boxes spawn
 positions = [(start_position[0], start_position[1], [0, 0, 0]), (goal_position[0], goal_position[1], [0, 0, 0])]
 num_boxes = random.randint(min_boxes, max_boxes)    # Number of boxes to place
+box_spawn_attempts = 100000                         # Number of attempts to place a box that is respecting the conditions
 print("########################################################################################")
 for i in range(num_boxes):
     box_size = get_random_box_sizes()
-    box_position = generate_non_overlapping_position_near_path(positions, box_size)
+    box_position = generate_non_overlapping_position_near_path(positions, box_size, box_spawn_attempts)
     if box_position is None:
+        print(f"Could not place box '{i}' after {box_spawn_attempts} attempts ...")
         continue
     box_angle = random.uniform(0, 2 * math.pi)
     positions.append((box_position[0], box_position[1], box_size))
     children.importMFNodeFromString(-1, f"myWoodenBox {{ translation {box_position[0]} {box_position[1]} {box_size[2]/2} rotation 0 0 1 {box_angle} size {box_size[0]} {box_size[1]} {box_size[2]} }}")
-    print(f"Placed box at ({box_position[0]:.2f}, {box_position[1]:.2f} {box_size[2]/2:.3f}) with angle {box_angle:.2f} rad and size {box_size}")
+    print(f"Placed box at ({box_position[0]:5.2f},{box_position[1]:5.2f},{box_size[2]/2:5.3f}) with angle {box_angle:5.2f} rad and size ({box_size[0]:5.2f},{box_size[1]:5.2f},{box_size[2]:5.2f})")
 print("########################################################################################")
 
 
@@ -173,7 +175,10 @@ def quat_to_axis_angle(q):
 
 # Initialization
 last_q_init = None
-angle_threshold = np.deg2rad(5)  # ° threshold
+angle_threshold = np.deg2rad(5)     # ° threshold
+i_debug = 10
+i = 0
+last_position = None
 
 # Supervisor working Loop
 while supervisor.step(timestep) != -1:
@@ -229,3 +234,28 @@ while supervisor.step(timestep) != -1:
     if viewpoint:
         viewpoint.getField("position").setSFVec3f(camera_position)
         viewpoint.getField("orientation").setSFRotation(camera_orientation)
+
+    # Add visual to the new Robot position
+    if not last_position:
+        last_position = epuck_translation
+    if np.linalg.norm(np.array(epuck_translation)-np.array(last_position)) < 0.02 and i % i_debug == 0:
+        supervisor.getRoot().getField("children").importMFNodeFromString(-1,
+            f"Transform {{ \
+                translation {epuck_translation[0]} {epuck_translation[1]} {0.035/4} \
+                children [ \
+                    Shape {{ \
+                        appearance Appearance {{ \
+                            material Material {{ \
+                                diffuseColor 0 1 0 \
+                                transparency 0 \
+                            }} \
+                        }} \
+                        geometry Sphere {{ radius {0.035/8} }} \
+                    }} \
+                ] \
+            }}"
+        )
+        last_position = epuck_translation
+
+    # Increase Loop counter
+    i+=1
