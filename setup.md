@@ -13,9 +13,7 @@
 
 ## 🧰 1. Install Webots
 
-Download and install Webots from the official website:
-
-**→** [**https://cyberbotics.com/#download**](https://cyberbotics.com/#download)
+Download and install Webots from the [**official website**](https://cyberbotics.com/#download)
 
 Install it in the default location.
 
