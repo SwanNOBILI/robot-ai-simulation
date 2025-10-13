@@ -11,12 +11,12 @@ BASE_SPEED = 5.0                # rad/s
 ROTATION_SPEED = BASE_SPEED / 4
 TUNED_BRAITENBERG_COEFFICIENTS = [
     [-0.942, 0.22],             # ps0 -> turn strongly to the left
-    [-0.63,  0.10],             # ps1 -> turn strongly to the left
-    [-0.5,   0.06],             # ps2 -> turn strongly to the left
+    [-0.63,  0.10],             # ps1 -> turn consequently to the left
+    [-0.5,   0.06],             # ps2 -> turn slightly to the left
     [ 1.3,   1.3],              # ps3 -> go strongly forward
     [ 1.3,   1.3],              # ps4 -> go strongly forward
-    [ 0.06, -0.5 ],             # ps5 -> turn strongly to the right
-    [ 0.10, -0.63],             # ps6 -> turn strongly to the right
+    [ 0.06, -0.5 ],             # ps5 -> turn slightly to the right
+    [ 0.10, -0.63],             # ps6 -> turn consequently to the right
     [ 0.22, -0.942]             # ps7 -> turn strongly to the right
 ]
 
@@ -158,7 +158,7 @@ while not norm_position_diff < norm_position_threshold:
     # Debug
     if i % idx_debugs == 0:
         #print(f"Current Motors Speed: ({left_motor_speed:5.2f},{right_motor_speed:5.2f}) | Desired Motors Speed: ({desired_left_motor_speed:5.2f}, {desired_right_motor_speed:5.2f})")
-        print(f"Progression {100*norm_position_diff/initial_distance:6.2f}% -> ΔP = [{position_diff[0]:6.3f},{position_diff[1]:6.3f}]")
+        print(f"Progression {100*(1-norm_position_diff/initial_distance):6.2f}% -> ΔP = [{position_diff[0]:6.3f},{position_diff[1]:6.3f}]")
         print("-----------------------------------------------------------------------------")
 
     # Increase loop count

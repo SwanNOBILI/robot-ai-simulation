@@ -105,6 +105,8 @@ robot-ai-simulation/
 │
 ├── .gitignore              'Files ignored by Git'
 │
+├── launch.bat              'Launch the current Simulation (can add a world_name argument)'
+│
 ├── main.py                 'Entry-point or test runner'
 │
 ├── readme.md               'Project Description'

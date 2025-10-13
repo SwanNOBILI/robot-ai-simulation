@@ -5,22 +5,41 @@ __pycache__/
 # Environments
 .venv/
 env/
+ENV/
+venv/
 
 # AI outputs
 models/*.pt
 models/*.onnx
+outputs/
+checkpoints/
+*.h5
+*.ckpt
 
 # Webots temp files
 *.wbo
-*.wbt~
+*.wbproj
+*.wbproj~
+.*.wbproj
 *.wrl~
 cache/
 *.log
+*.tmp
+*.swp
 
 # OS-specific
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
 
 # Code Editors
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
+
+# Python packaging
+pip-log.txt
+pip-delete-this-directory.txt
