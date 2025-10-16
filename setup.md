@@ -28,10 +28,6 @@ python -m venv .venv
 .venv\Scripts\activate
 ```
 
-And you will also need to add your `Webots Path` to your `PYTHONPATH` system variable. To do so, just edit your 'system environment variables', in the System Variables:
-- if `PYTHONPATH` already exist add `;Webots Path` at the end
-- if not, create a new variable namde `PYTHONPATH` and put the value `Webots Path` (default value `C:\Users\<YOUR_NAME>\AppData\Local\Programs\Webots\lib\controller\python`)
-
 --------------------
 
 ## 🧪 3. Set Up the used modules/libraries
