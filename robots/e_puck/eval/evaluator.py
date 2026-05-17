@@ -91,7 +91,7 @@ class Evaluator:
 
     def save(self):
         data = self.compute_metrics()
-        folder = "../eval"
+        folder = "../../eval"
         prefix = self.controller
         max_index = -1
         for filename in os.listdir(folder):

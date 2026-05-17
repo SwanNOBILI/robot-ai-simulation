@@ -1,6 +1,6 @@
 from controller import Robot
 import numpy as np
-from robots.e_puck.controllers.eval.evaluator import Evaluator
+from robots.e_puck.eval.evaluator import Evaluator
 
 
 
