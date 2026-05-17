@@ -30,7 +30,7 @@ Robot {
   children [
     Emitter {
       name "supervisor_emitter"
-      channel 2
+      channel 0
     }
     Receiver {
       name "supervisor_receiver"
@@ -41,8 +41,8 @@ Robot {
 DEF EPUCK E-puck {
   name "e-puck"
   controller "basic"
+  receiver_channel 0
   emitter_channel 1
-  receiver_channel 2
   turretSlot [
     GPS {
     }
