@@ -1,0 +1,10 @@
+{
+  "elapsed_time": 44.416,
+  "total_distance_travelled": 0.849,
+  "goal_reached": true,
+  "best_distance_to_goal": 0.01,
+  "collision_score": 109019,
+  "total_collision_time": 0.224,
+  "predicted_collision_count": 4,
+  "path_efficiency": 87.17
+}

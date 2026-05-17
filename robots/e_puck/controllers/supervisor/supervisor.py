@@ -1,9 +1,9 @@
 from controller import Supervisor
 import random
-import math
 import numpy as np
 
 # Supervisor Initialization
+PI = np.pi
 supervisor = Supervisor()
 timestep = int(supervisor.getBasicTimeStep())
 emitter = supervisor.getDevice("supervisor_emitter")
@@ -103,7 +103,7 @@ Transform {{
 
 # E-puck spawn & goal
 start_position, goal_position = get_start_and_goal_position(min_start_goal_distance, maximal_box_size)
-epuck_angle = random.uniform(0, 2 * math.pi)
+epuck_angle = random.uniform(0, 2 * PI)
 # Set Robot into its start position and initial angle
 epuck_node = supervisor.getFromDef("EPUCK")
 if epuck_node:
@@ -131,7 +131,7 @@ for i in range(num_boxes):
     if box_position is None:
         print(f"Could not place box '{i}' after {box_spawn_attempts} attempts ...")
         continue
-    box_angle = random.uniform(0, 2 * math.pi)
+    box_angle = random.uniform(0, 2 * PI)
     positions.append((box_position[0], box_position[1], box_size))
     children.importMFNodeFromString(-1, f"myWoodenBox {{ translation {box_position[0]} {box_position[1]} {box_size[2]/2} rotation 0 0 1 {box_angle} size {box_size[0]} {box_size[1]} {box_size[2]} }}")
     print(f"Placed box at ({box_position[0]:5.2f},{box_position[1]:5.2f},{box_size[2]/2:5.3f}) with angle {box_angle:5.2f} rad and size ({box_size[0]:5.2f},{box_size[1]:5.2f},{box_size[2]:5.2f})")
@@ -181,7 +181,7 @@ i = 0
 last_position = None
 
 # Supervisor working Loop
-while supervisor.step(timestep) != -1:
+while supervisor.step() != -1:
     # Stop the Supervisor when the Controller is finished (Robot not moving anymore)
     if receiver.getQueueLength() > 0:
         message = receiver.getString()
@@ -238,7 +238,7 @@ while supervisor.step(timestep) != -1:
     # Add visual to the new Robot position
     if not last_position:
         last_position = epuck_translation
-    if np.linalg.norm(np.array(epuck_translation)-np.array(last_position)) < 0.02 and i % i_debug == 0:
+    if np.linalg.norm(np.array(epuck_translation)-np.array(last_position)) > 0.01 and i % i_debug == 0:
         supervisor.getRoot().getField("children").importMFNodeFromString(-1,
             f"Transform {{ \
                 translation {epuck_translation[0]} {epuck_translation[1]} {0.035/4} \
@@ -259,3 +259,6 @@ while supervisor.step(timestep) != -1:
 
     # Increase Loop counter
     i+=1
+
+# Exit Webots
+supervisor.simulationQuit(1)
