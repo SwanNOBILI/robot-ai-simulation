@@ -96,8 +96,11 @@ robot-ai-simulation/
 ├── logs/                   'Notes, experiment logs, debug info'
 │   └── log_n.md                 'Log number "n" on the work done'
 │
-├── models/                 'Saved PyTorch models (".pt" or ".onnx" files)'
-│   └── readme.md                'Notes on each model and training context'
+├── ai/                          'All AI-related code'
+│   ├── replay_buffer.py             'ReplayBuffer class'
+│   ├── actor.py                     'Actor MLP'
+│   ├── critic.py                    'Critic MLP'
+│   └── sac_agent.py                 'SAC training logic'
 │
 ├── robots/e_puck           'All (e-puck) Webot-related files'
 │   ├── controllers/             'C/C++/Python scripts that make the Robot & World work'
@@ -115,9 +118,7 @@ robot-ai-simulation/
 │
 ├── .gitignore              'Files ignored by Git'
 │
-├── launch.bat              'Launch the current Simulation (can add a world_name argument)'
-│
-├── main.py                 'Entry-point or test runner'
+├── main.py                 'Entry-point'
 │
 ├── readme.md               'Project Description'
 │

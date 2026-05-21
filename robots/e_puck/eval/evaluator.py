@@ -27,9 +27,9 @@ class Evaluator:
 
     def reset(self):
         # Evaluation variables
+        self.goal_reached = False
         self.elapsed_time = 0.0
         self.total_distance_travelled = 0.0
-        self.goal_reached = False
         self.best_distance_to_goal = float("inf")
         self.total_collision_time = 0.0
         self.predicted_collision_count = 0
@@ -40,14 +40,14 @@ class Evaluator:
         self.prev_position = None
 
     def update(self, position, orientation, distance_to_goal, sensor_values, motor_speed):
-        self.elapsed_time += self.timestep/1000 # from ms to s
-        # Travelled distance tracking
-        if self.prev_position is not None:
-            delta_position = np.linalg.norm(position - self.prev_position) # used for tracking several things
-            self.total_distance_travelled += delta_position
         # Objective reached tracking
         if distance_to_goal < self.goal_distance_tolerance:
             self.goal_reached = True
+        # Time tracking
+        self.elapsed_time += self.timestep/1000 # from ms to s
+        # Travelled distance tracking
+        if self.prev_position is not None:
+            self.total_distance_travelled += np.linalg.norm(position - self.prev_position)
         # Best distance to goal & no progression time tracking
         if self.best_distance_to_goal > distance_to_goal:
             self.best_distance_to_goal = distance_to_goal

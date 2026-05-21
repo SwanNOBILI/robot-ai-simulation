@@ -1,14 +1,11 @@
 from controller import Robot
 import numpy as np
+from robots.e_puck.controllers.global_var import *
 from robots.e_puck.eval.evaluator import Evaluator
 
 
 
-# FIXED VARIABLE
-SENSOR_PREFIX = "ps"
-NUM_DISTANCE_SENSORS = 8
-WHEEL_RADIUS = 0.0205   # value given in the e-puck documentation
-MAX_MOTOR_SPEED = 6.28  # value given in the e-puck documentation
+# Fixed Variables
 PI = np.pi
 TUNED_BRAITENBERG_COEFFICIENTS = [
     [-0.942, 0.22],     # ps0 -> turn strongly to the left
@@ -25,10 +22,9 @@ TUNED_BRAITENBERG_COEFFICIENTS = [
 
 # Initialization
 robot = Robot()
-timestep = int(robot.getBasicTimeStep())
 emitter = robot.getDevice("emitter")
 receiver = robot.getDevice("receiver")
-receiver.enable(timestep)
+receiver.enable(TIMESTEP)
 
 # Get the Robot goal (from supervisor)
 goal_position = None
@@ -38,21 +34,21 @@ while goal_position is None:
         gx, gy = map(float, message.strip().split())
         goal_position = np.array([gx, gy])
         receiver.nextPacket()
-    robot.step()    # robot.step() advances the simulation, so that we can get the message
+    robot.step(TIMESTEP)    # robot.step(TIMESTEP) advances the simulation, so that we can get the message
 
 # Get and enable 8 distance sensors
 sensors = []
 for s in range(NUM_DISTANCE_SENSORS):
     name = f"{SENSOR_PREFIX}{s}"
     sensor = robot.getDevice(name)
-    sensor.enable(timestep)
+    sensor.enable(TIMESTEP)
     sensors.append(sensor)
 
 # GPS & Compass
 gps = robot.getDevice("gps")
 compass = robot.getDevice("compass")
-gps.enable(timestep)
-compass.enable(timestep)
+gps.enable(TIMESTEP)
+compass.enable(TIMESTEP)
 
 # Get motors and set to velocity control mode
 left_motor = robot.getDevice("left wheel motor")
@@ -90,18 +86,18 @@ def proximity_weight(sensor_value, scale=70):
     return np.exp(sensor_value / scale) - 1
 
 # Initialization
-robot.step()                # the time value is the default one as there is no argument, it is the same as "timestep" value
+robot.step(TIMESTEP)                # the time value is the default one as there is no argument, it is the same as "TIMESTEP" value
 i = 0                       # loop count
 idx_debugs = 25             # used for debug
 left_motor_speed = 0.0; right_motor_speed = 0.0
 # Loop conditions are defined in the "evaluator" variable
-evaluator = Evaluator(controller="basic", timestep=timestep, maximum_motor_speed=MAX_MOTOR_SPEED, wheel_radius=WHEEL_RADIUS,
+evaluator = Evaluator(controller="basic", TIMESTEP=TIMESTEP, maximum_motor_speed=MAX_MOTOR_SPEED, wheel_radius=WHEEL_RADIUS,
                       goal_distance_tolerance=0.01, initial_goal_distance=np.linalg.norm(goal_position - np.array(gps.getValues()[:2])))
 
 # Main loop
 while not evaluator.goal_reached and evaluator.no_progression_time < 15.0:
     # Go to the next simulation step
-    robot.step()
+    robot.step(TIMESTEP)
     # Get the Proximity sensor values
     sensor_values = [sensor.getValue() for sensor in sensors]
     # Get current needed values

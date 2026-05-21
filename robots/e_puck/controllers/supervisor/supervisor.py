@@ -1,14 +1,14 @@
 from controller import Supervisor
-import random
 import numpy as np
+from robots.e_puck.controllers.global_var import TIMESTEP
+import random
 
 # Supervisor Initialization
 PI = np.pi
 supervisor = Supervisor()
-timestep = int(supervisor.getBasicTimeStep())
 emitter = supervisor.getDevice("supervisor_emitter")
 receiver = supervisor.getDevice("supervisor_receiver")
-receiver.enable(timestep)
+receiver.enable(TIMESTEP)
 root = supervisor.getRoot()
 children = root.getField("children")
 arena_node = supervisor.getFromDef("ARENA")
@@ -181,7 +181,7 @@ i = 0
 last_position = None
 
 # Supervisor working Loop
-while supervisor.step() != -1:
+while supervisor.step(TIMESTEP) != -1:
     # Stop the Supervisor when the Controller is finished (Robot not moving anymore)
     if receiver.getQueueLength() > 0:
         message = receiver.getString()

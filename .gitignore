@@ -1,6 +1,7 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
 
 # Environments
 .venv/
@@ -8,13 +9,9 @@ env/
 ENV/
 venv/
 
-# AI outputs
+# AI models (tracked via Git LFS instead)
 models/*.pt
 models/*.onnx
-outputs/
-checkpoints/
-*.h5
-*.ckpt
 
 # Webots temp files
 *.wbo
@@ -22,24 +19,22 @@ checkpoints/
 *.wbproj~
 .*.wbproj
 *.wrl~
-cache/
 *.log
 *.tmp
 *.swp
+cache/
+
+# Evaluation outputs
+robots/e_puck/controllers/eval/*.json
 
 # OS-specific
 .DS_Store
 Thumbs.db
 ehthumbs.db
-Icon?
 desktop.ini
 
-# Code Editors
+# Code editors
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
-
-# Python packaging
-pip-log.txt
-pip-delete-this-directory.txt
