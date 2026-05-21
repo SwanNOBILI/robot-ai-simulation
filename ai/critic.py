@@ -10,8 +10,8 @@ class Critic(torch.nn.Module):
         self.fc3 = torch.nn.Linear(hidden_size, 1)                      # output_size = 1, Q-value prediction (score of a given action)
 
     def forward(self, state, action):
-        x = torch.cat([state, action], dim=1)
-        x = torch.relu(self.fc1(x))     # activation function (hyperparameter)
-        x = torch.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
+        Q = torch.cat([state, action], dim=1)
+        Q = torch.relu(self.fc1(Q))     # activation function (hyperparameter)
+        Q = torch.relu(self.fc2(Q))
+        Q = self.fc3(Q)
+        return Q
