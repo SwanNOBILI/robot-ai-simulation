@@ -20,7 +20,7 @@ class Actor(torch.nn.Module):
     
     # Gives an action & probability of this action
     def sample(self, state):
-        mean, log_std = self.forward(state)
+        mean, log_std = self(state)     # calling self.forward(state) but adding gradient hooks, autograd, ...
         normal = torch.distributions.Normal(mean, log_std.exp())    # Gaussian Normal distribution
         x = normal.rsample()                                        # reparameterization trick (to keep the operation differentiable)
         action = torch.tanh(x)                                      # boundaries [-1, 1]
