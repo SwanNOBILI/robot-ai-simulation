@@ -1,0 +1,52 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+IMPORTABLE EXTERNPROTO "../proto/myWoodenBox.proto"
+EXTERNPROTO "../proto/E-puck.proto"
+
+WorldInfo {
+  info [
+    "The Model of my E-puck robot"
+  ]
+  title "My E-puck simulation"
+}
+DEF VIEW Viewpoint {
+  position 0 0 0
+  orientation 0 1 0 0
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+DEF ARENA RectangleArena {
+  floorSize 1.0 1.5
+}
+Robot {
+  name "supervisor"
+  supervisor TRUE
+  controller "supervisor"
+  children [
+    Emitter {
+      name "supervisor_emitter"
+      channel 0
+    }
+    Receiver {
+      name "supervisor_receiver"
+      channel 1
+    }
+  ]
+}
+DEF EPUCK E-puck {
+  name "e-puck"
+  controller "sac"
+  receiver_channel 0
+  emitter_channel 1
+  turretSlot [
+    GPS {
+    }
+    Compass {
+    }
+  ]
+}

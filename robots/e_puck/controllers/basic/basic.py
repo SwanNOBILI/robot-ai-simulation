@@ -1,11 +1,13 @@
 from controller import Robot
 import numpy as np
+import os
 from robots.e_puck.controllers.global_var import *
 from robots.e_puck.eval.evaluator import Evaluator
 
 
 
 # Fixed Variables
+if os.environ.get("MODE", "eval") == "train": raise RuntimeError("\"basic\" controller cannot be run in train mode !")
 PI = np.pi
 TUNED_BRAITENBERG_COEFFICIENTS = [
     [-0.942, 0.22],     # ps0 -> turn strongly to the left
@@ -57,6 +59,7 @@ left_motor.setPosition(float("inf"))
 right_motor.setPosition(float("inf"))
 left_motor.setVelocity(0.0)     # set the left_motor Velocity to 0.0
 right_motor.setVelocity(0.0)    # set the right_motor Velocity to 0.0
+robot.step(TIMESTEP)
 
 
 
@@ -85,31 +88,30 @@ def proximity_weight(sensor_value, scale=70):
     """
     return np.exp(sensor_value / scale) - 1
 
-# Initialization
-robot.step(TIMESTEP)                # the time value is the default one as there is no argument, it is the same as "TIMESTEP" value
-i = 0                       # loop count
-idx_debugs = 25             # used for debug
-left_motor_speed = 0.0; right_motor_speed = 0.0
-# Loop conditions are defined in the "evaluator" variable
-evaluator = Evaluator(controller="basic", TIMESTEP=TIMESTEP, maximum_motor_speed=MAX_MOTOR_SPEED, wheel_radius=WHEEL_RADIUS,
-                      goal_distance_tolerance=0.01, initial_goal_distance=np.linalg.norm(goal_position - np.array(gps.getValues()[:2])))
-
-# Main loop
-while not evaluator.goal_reached and evaluator.no_progression_time < 15.0:
-    # Go to the next simulation step
-    robot.step(TIMESTEP)
-    # Get the Proximity sensor values
+# Get the Environment useful values
+def get_observations():
     sensor_values = [sensor.getValue() for sensor in sensors]
-    # Get current needed values
-    current_position = gps.getValues()
-    north = compass.getValues()     # in this world.wbt, "y" axis points to north (and not "x" axis)
-    current_angle = (np.arctan2(north[0], north[1])) % (2*PI)
-    # Compute Robot objective
-    position_to_goal_diff = goal_position - np.array(current_position[:2])    # no height consideration
+    current_position = np.array(gps.getValues()[:2])
+    position_to_goal_diff = goal_position - current_position
     distance_to_goal = np.linalg.norm(position_to_goal_diff)
+    north = compass.getValues()
+    current_angle = (np.arctan2(north[0], north[1])) % (2*PI)
     goal_angle = np.arctan2(position_to_goal_diff[1], position_to_goal_diff[0])
     angle_to_goal = np.arctan2(np.sin(goal_angle-current_angle), np.cos(goal_angle-current_angle))
+    return sensor_values, current_position, current_angle, distance_to_goal, angle_to_goal
+
+# Initialization
+initial_goal_distance = np.linalg.norm(goal_position - np.array(gps.getValues()[:2]))
+best_distance_to_goal = initial_goal_distance
+left_motor_speed = 0.0; right_motor_speed = 0.0; goal_reached = False; no_progression_time = 0.0
+evaluator = Evaluator(controller="basic", timestep=TIMESTEP, maximum_motor_speed=MAX_MOTOR_SPEED, wheel_radius=WHEEL_RADIUS)
+
+# Main Loop
+while not goal_reached and no_progression_time < NO_PROGRESSION_TIME_LIMIT:
+    # Go to the next simulation step
+    robot.step(TIMESTEP)
     # Obstacles avoidance using Braitenberg motion
+    sensor_values, current_position, current_angle, distance_to_goal, angle_to_goal = get_observations()
     forward_speed = 0.0; rotation_speed = 0.0
     for s in range(NUM_DISTANCE_SENSORS):
         weight = proximity_weight(sensor_values[s])
@@ -123,36 +125,35 @@ while not evaluator.goal_reached and evaluator.no_progression_time < 15.0:
     # Final brake if the Robot is close to the goal, brake_threshold = k1*goal_tolerance + k2*linear_speed
     # with linear_speed = r*0.5*(|​ωl|+|​ωr|)
     current_linear_speed = WHEEL_RADIUS*0.5*(abs(left_motor_speed) + abs(right_motor_speed))
-    brake_threshold = 5*evaluator.goal_distance_tolerance + 0.5*current_linear_speed
+    brake_threshold = 5*GOAL_DISTANCE_TOLERANCE + 0.5*current_linear_speed
     if distance_to_goal < brake_threshold:  # when close enough to the goal
-        brake_factor = np.clip((distance_to_goal-evaluator.goal_distance_tolerance)/(brake_threshold-evaluator.goal_distance_tolerance),
+        brake_factor = np.clip((distance_to_goal-GOAL_DISTANCE_TOLERANCE)/(brake_threshold-GOAL_DISTANCE_TOLERANCE),
                                0.0, 1.0)
         forward_speed *= brake_factor
         rotation_speed *= (1.0 + 0.5*brake_factor)   # Rotation speed will be twice (+1) faster than Forward speed
     # Get a smooth velocity (from 'current_motor_speeds' to 'desired_motor_speeds')
     left_motor_speed = get_smooth_velocity(left_motor_speed, forward_speed-rotation_speed)
     right_motor_speed = get_smooth_velocity(right_motor_speed, forward_speed+rotation_speed)
-    # Set motors velocity
     left_motor.setVelocity(left_motor_speed)
     right_motor.setVelocity(right_motor_speed)
-    # Evaluate the current values
-    evaluator.update(np.array(current_position[:2]), current_angle, distance_to_goal, np.array(sensor_values),
-                     (left_motor_speed, right_motor_speed))
-    # Debug
-    if i % idx_debugs == 0 or evaluator.goal_reached:
-        print(f"Progression {100*(1-distance_to_goal/evaluator.initial_goal_distance):6.2f}% in {evaluator.elapsed_time:6.3f} seconds")
-        print("-----------------------------------------------------------------------------")
-    # Increase loop count
-    i+=1
+    # End Loop conditions
+    if distance_to_goal <= GOAL_DISTANCE_TOLERANCE: goal_reached = True
+    if best_distance_to_goal > distance_to_goal:
+        best_distance_to_goal = distance_to_goal
+        no_progression_time = 0.0
+    else: no_progression_time += TIMESTEP/1000    # from ms to s
+    # Evaluate the useful values
+    evaluator.update(current_position, current_angle, best_distance_to_goal, sensor_values, (left_motor_speed, right_motor_speed), 
+                     goal_reached)
+
+# Save evaluation data
+evaluator.save(evaluator.compute_metrics(initial_goal_distance))
 
 
 
 # When the goal is reached, stop moving
 left_motor.setVelocity(0)
 right_motor.setVelocity(0)
-
-# Save the final evaluation
-evaluator.save()
 
 # Send the information that the Controller is finished (robot isn't moving anymore) (into the channel 1, see in .wbt file)
 emitter.send("finished")

@@ -8,14 +8,15 @@ import os
 # Webots executable path
 WEBOTS_EXE = r"C:\Users\nobil\AppData\Local\Programs\Webots\msys64\mingw64\bin\webots.exe"
 # World files
-SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-WORLDS_DIR  = os.path.join(SCRIPT_DIR, "robots", "e_puck", "worlds")
-WORLD_TRAIN = os.path.join(WORLDS_DIR, "my_world.wbt")
-WORLD_EVAL  = os.path.join(WORLDS_DIR, "my_world.wbt")  # will become comparison_world.wbt
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+WORLDS_DIR = os.path.join(SCRIPT_DIR, "robots", "e_puck", "worlds")
+BASIC_WORLD = os.path.join(WORLDS_DIR, "world_basic.wbt")
+SAC_WORLD = os.path.join(WORLDS_DIR, "world_sac.wbt")
+COMPARISON_WORLD = os.path.join(WORLDS_DIR, "world_basic_sac.wbt")    # TODO
 
 
 
-def launch_webots(world_path: str, headless: bool = False) -> int:
+def launch_webots(world_path: str, headless: bool = False, mode = "train", episodes = None) -> int:
     # Check if Webots is found
     if not os.path.isfile(WEBOTS_EXE):
         print(f"ERROR: Webots executable not found at:\n  {WEBOTS_EXE}")
@@ -24,53 +25,52 @@ def launch_webots(world_path: str, headless: bool = False) -> int:
     if not os.path.isfile(world_path):
         print(f"ERROR: World file not found at:\n  {world_path}")
         sys.exit(1)
-    cmd = [WEBOTS_EXE]
-    # Default configuration
-    if headless:
-        cmd += ["--batch", "--no-rendering", "--mode=fast"]
-    cmd.append(world_path)
-    # Give PYTHONPATH to Webots
+    # Manage Environment Variable
     env = os.environ.copy()
     env["PYTHONPATH"] = SCRIPT_DIR + os.pathsep + env.get("PYTHONPATH", "")
-    # Launchign Webots
-    print(f"Launching Webots {'(headless)' if headless else '(GUI)'}...")
+    env["MODE"] = mode
+    if episodes is not None: env["TOTAL_EPISODES"] = str(episodes)
+    # Manage Configuration
+    cmd = [WEBOTS_EXE]
+    if headless: cmd += ["--batch", "--no-rendering", "--mode=fast"]
+    cmd.append(world_path)
+    # Launching Webots
+    print(f"Launching Webots {'HEADLESS' if headless else 'GUI'}")
     result = subprocess.run(cmd, env=env)
     return result.returncode
 
 
 
 def run_train(episodes: int) -> None:
-    # Run `episodes` training episodes back-to-back in headless mode.
-    # Each episode is a full Webots simulation (Webots quits at the end via supervisor.simulationQuit()).
-    print(f"---------- TRAINING MODE ({episodes} episode(s)) ----------\n")
-    for episode in range(1, episodes + 1):
-        print(f"--- Episode {episode}/{episodes} ---")
-        code = launch_webots(WORLD_TRAIN, headless=True)
-        if code != 0:
-            print(f"WARNING: Webots exited with code {code} on episode {episode}.")
-    print("\nTraining complete.")
+    code = launch_webots(SAC_WORLD, headless=True, mode="train", episodes=str(episodes))
+    if code != 0: print(f"WARNING: Webots exited with code {code}")
+    print("Training complete !")
 
 def run_eval(basic: bool, sac: bool) -> None:
     # Run an evaluation episode in GUI mode.
-    # - basic only  : uses my_world.wbt with the basic controller
-    # - basic + sac : will use comparison_world.wbt (not yet implemented)
+    # - basic only  : uses world_basic.wbt with the basic controller
+    # - sac only  : uses world_sac.wbt with the basic controller
+    # - basic + sac : will use world_basic_sac.wbt
     print("---------- EVALUATION MODE ----------\n")
     if basic and not sac:
-        print("Evaluating: basic controller")
-        launch_webots(WORLD_EVAL, headless=False)
+        print("Evaluating: \"basic\" controller")
+        launch_webots(BASIC_WORLD, headless=False, mode="eval")
+    elif sac and not basic:
+        print("Evaluating: \"sac\" controller")
+        launch_webots(SAC_WORLD, headless=False, mode="eval")
     elif basic and sac:
-        # TODO: switch to comparison_world.wbt once it is ready
         print("Evaluating: basic + SAC controllers")
         print("NOTE: comparison_world.wbt is not yet implemented.")
         print("      Running basic controller only for now.")
-        launch_webots(WORLD_EVAL, headless=False)
+        launch_webots(COMPARISON_WORLD, headless=False, mode="eval")
     else:
-        print("ERROR: --eval requires at least --basic.")
+        print("ERROR: --eval requires a controller")
         print("  Usage examples:")
         print("    python main.py --eval --basic")
+        print("    python main.py --eval --sac")
         print("    python main.py --eval --basic --sac")
         sys.exit(1)
-    print("\nEvaluation complete.")
+    print("Evaluation complete")
 
 
 

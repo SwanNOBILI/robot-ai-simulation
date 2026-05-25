@@ -1,7 +1,8 @@
 import torch
-from replay_buffer import ReplayBuffer
-from actor import Actor
-from critic import Critic
+import os
+from ai.replay_buffer import ReplayBuffer
+from ai.actor import Actor
+from ai.critic import Critic
 
 
 
@@ -39,11 +40,6 @@ class SAC_Agent():
     def train_step(self):
         # Get replay_buffer values (convert them into tensors)
         states, actions, rewards, next_states, dones = self.replay_buffer.sample(self.batch_size)
-        states = torch.tensor(states, dtype=torch.float32)
-        actions = torch.tensor(actions, dtype=torch.float32)
-        rewards = torch.tensor(rewards, dtype=torch.float32)
-        next_states = torch.tensor(next_states, dtype=torch.float32)
-        dones = torch.tensor(dones, dtype=torch.float32)
         # Compute objective y = r + γ*(1 − d)*(min(Q1(next_st,next_at)​, Q2(next_st,next_at)​) - α*log_π)
         with torch.no_grad():   # disable autogradient -> no Wheights upgrade for self.actor, self.critic1_target, self.critic2_target
             next_actions, next_logs_π = self.actor.sample(next_states)
@@ -77,8 +73,8 @@ class SAC_Agent():
         torch.save(self.critic2_target.state_dict(), folder_path+"critic2_target.pt")
 
     def load(self, folder_path):
-        self.actor.load_state_dict(torch.load(folder_path+"actor.pt"))
-        self.critic1.load_state_dict(torch.load(folder_path+"critic1.pt"))
-        self.critic2.load_state_dict(torch.load(folder_path+"critic2.pt"))
-        self.critic1_target.load_state_dict(torch.load(folder_path+"critic1_target.pt"))
-        self.critic2_target.load_state_dict(torch.load(folder_path+"critic2_target.pt"))
+        self.actor.load_state_dict(torch.load(os.path.join(folder_path,"actor.pt"),weights_only=True))
+        self.critic1.load_state_dict(torch.load(os.path.join(folder_path,"critic1.pt"),weights_only=True))
+        self.critic2.load_state_dict(torch.load(os.path.join(folder_path,"critic2.pt"),weights_only=True))
+        self.critic1_target.load_state_dict(torch.load(os.path.join(folder_path, "critic1_target.pt"),weights_only=True))
+        self.critic2_target.load_state_dict(torch.load(os.path.join(folder_path,"critic2_target.pt"),weights_only=True))

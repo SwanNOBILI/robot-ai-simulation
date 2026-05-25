@@ -24,7 +24,7 @@ class Actor(torch.nn.Module):
         normal = torch.distributions.Normal(mean, log_std.exp())    # Gaussian Normal distribution
         x = normal.rsample()                                        # reparameterization trick (to keep the operation differentiable)
         action = torch.tanh(x)                                      # boundaries [-1, 1]
-        action_scaled = action * self.max_action                    # boundaries [-self.max_action, self.max_action]
+        action_scaled = action * (self.max_action-1e-6)             # boundaries [-self.max_action+1e-6, self.max_action-1e-6]
         # log_π(a) = log_π(x) - ∑(log(1−tanh²(xi​))) --> p(a) = p(x)*(dx/da) = p(x)*(1/f'(x)) --> log(p(a)) = log(p(x)) - log(f'(x)))
         log_π = normal.log_prob(x)-torch.log(1-action.pow(2)+1e-6)  # 1e-6 avoids log(0) as "1+1e-6" is out of tanh(x) boundaries
         # Independant actions --> p(a1,a2) = p(a1)*p(a2) --> log(p(a1,a2)) = log(p(a1)) + log(p(a2)) = ∑(log(p(ai)))
